@@ -51,9 +51,54 @@ public class HostDiscovery {
 						String[] l = line.trim().split(" ", 2);
 						if (l != null && l.length > 1) {
 							if (l[0].equals("Host")) {
-								System.out.println(l[1]);
+								if (l[1].contains(" ")) {
+									String[] hs = l[1].split(" ");
+									for (String h : hs) {
+										if (h.startsWith("*")) {
+											h = h.replace("*", "");
+											if (h.startsWith(".")) {
+												h = h.replaceFirst(".", "");
+											}
+										}
+										if (!h.isEmpty())
+											System.out.println(h);
+									}
+								} else {
+									String h = l[1];
+									if (h.startsWith("*")) {
+										h = h.replace("*", "");
+										if (h.startsWith(".")) {
+											h = h.replaceFirst(".", "");
+										}
+									}
+									if (!h.isEmpty())
+										System.out.println(h);
+								}
+
 							} else if (l[0].equals("HostName")) {
-								System.out.println(l[1]);
+								if (l[1].contains(" ")) {
+									String[] hs = l[1].split(" ");
+									for (String h : hs) {
+										if (h.startsWith("*")) {
+											h = h.replace("*", "");
+											if (h.startsWith(".")) {
+												h = h.replaceFirst(".", "");
+											}
+										}
+										if (!h.isEmpty())
+											System.out.println(h);
+									}
+								} else {
+									String h = l[1];
+									if (h.startsWith("*")) {
+										h = h.replace("*", "");
+										if (h.startsWith(".")) {
+											h = h.replaceFirst(".", "");
+										}
+									}
+									if (!h.isEmpty())
+										System.out.println(l[1]);
+								}
 							}
 						}
 					}
@@ -98,6 +143,17 @@ public class HostDiscovery {
 										System.out.println(h);
 									}
 								}
+							} else {
+								if (fStr.contains("!")) {
+									fStr = fStr.replace("!", "");
+								}
+								if (fStr.startsWith("*")) {
+									fStr = fStr.replace("*", "");
+									if (fStr.startsWith(".")) {
+										fStr = fStr.replaceFirst(".", "");
+									}
+								}
+								System.out.println(fStr);
 							}
 						}
 
@@ -115,10 +171,10 @@ public class HostDiscovery {
 										System.out.println(hstnm);
 									}
 								}
+							} else {
+								String hstnm = fStr.substring(0, fStr.indexOf(':'));
+								System.out.println(hstnm);
 							}
-							// else {
-							// System.out.println(fStr);
-							// }
 						}
 
 						// options, bits, exponent, modulus, comment
@@ -212,13 +268,17 @@ public class HostDiscovery {
 	public static void main(String[] args) {
 		try {
 			readFileEtcHosts("/etc/hosts");
+
 			readFileSshConfig(System.getProperty("user.home") + "/.ssh/config");
 			readFileSshConfig("/etc/ssh/ssh_config");
+
 			readFileAuthKeys(System.getProperty("user.home") + "/.ssh/authorized_keys");
 			readFileAuthKeys("/Users/kvivekanandan/Desktop/ASU/CSE_545_Software_Security/c_authorized_keys");
-			readFileKwnHosts(System.getProperty("user.home") +"/.ssh/known_hosts");
+
+			readFileKwnHosts(System.getProperty("user.home") + "/.ssh/known_hosts");
 			readFileKwnHosts("/etc/ssh/ssh_known_hosts");
 			readFileKwnHosts("/Users/kvivekanandan/Desktop/ASU/CSE_545_Software_Security/ssh_known_hosts");
+
 		} catch (FileNotFoundException e) {
 			System.out.println(e.getMessage());
 		}
