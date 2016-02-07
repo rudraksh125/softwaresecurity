@@ -54,50 +54,30 @@ public class HostDiscovery {
 								if (l[1].contains(" ")) {
 									String[] hs = l[1].split(" ");
 									for (String h : hs) {
-										if (h.startsWith("*")) {
-											h = h.replace("*", "");
-											if (h.startsWith(".")) {
-												h = h.replaceFirst(".", "");
-											}
-										}
-										if (!h.isEmpty())
-											System.out.println(h);
+										String hnm = resolveHostName(h);
+										if (!hnm.isEmpty())
+											System.out.println(hnm);
 									}
 								} else {
 									String h = l[1];
-									if (h.startsWith("*")) {
-										h = h.replace("*", "");
-										if (h.startsWith(".")) {
-											h = h.replaceFirst(".", "");
-										}
-									}
-									if (!h.isEmpty())
-										System.out.println(h);
+									String hnm = resolveHostName(h);
+									if (!hnm.isEmpty())
+										System.out.println(hnm);
 								}
 
 							} else if (l[0].equals("HostName")) {
 								if (l[1].contains(" ")) {
 									String[] hs = l[1].split(" ");
 									for (String h : hs) {
-										if (h.startsWith("*")) {
-											h = h.replace("*", "");
-											if (h.startsWith(".")) {
-												h = h.replaceFirst(".", "");
-											}
-										}
-										if (!h.isEmpty())
-											System.out.println(h);
+										String hnm = resolveHostName(h);
+										if (!hnm.isEmpty())
+											System.out.println(hnm);
 									}
 								} else {
 									String h = l[1];
-									if (h.startsWith("*")) {
-										h = h.replace("*", "");
-										if (h.startsWith(".")) {
-											h = h.replaceFirst(".", "");
-										}
-									}
-									if (!h.isEmpty())
-										System.out.println(l[1]);
+									String hnm = resolveHostName(h);
+									if (!hnm.isEmpty())
+										System.out.println(hnm);
 								}
 							}
 						}
@@ -134,26 +114,18 @@ public class HostDiscovery {
 										if (h.contains("!")) {
 											h = h.replace("!", "");
 										}
-										if (h.startsWith("*")) {
-											h = h.replace("*", "");
-											if (h.startsWith(".")) {
-												h = h.replaceFirst(".", "");
-											}
-										}
-										System.out.println(h);
+										String hnm = resolveHostName(h);
+										if (!hnm.isEmpty())
+											System.out.println(hnm);
 									}
 								}
 							} else {
 								if (fStr.contains("!")) {
 									fStr = fStr.replace("!", "");
 								}
-								if (fStr.startsWith("*")) {
-									fStr = fStr.replace("*", "");
-									if (fStr.startsWith(".")) {
-										fStr = fStr.replaceFirst(".", "");
-									}
-								}
-								System.out.println(fStr);
+								String hnm = resolveHostName(fStr);
+								if (!hnm.isEmpty())
+									System.out.println(hnm);
 							}
 						}
 
@@ -167,13 +139,15 @@ public class HostDiscovery {
 								String[] hs = fStr.split(",");
 								if (hs != null && hs.length > 0) {
 									for (String h : hs) {
-										String hstnm = h.substring(0, h.indexOf(':'));
-										System.out.println(hstnm);
+										String hnm = resolveHostName(h);
+										if (!hnm.isEmpty())
+											System.out.println(hnm);
 									}
 								}
 							} else {
-								String hstnm = fStr.substring(0, fStr.indexOf(':'));
-								System.out.println(hstnm);
+								String hnm = resolveHostName(fStr);
+								if (!hnm.isEmpty())
+									System.out.println(hnm);
 							}
 						}
 
@@ -198,6 +172,26 @@ public class HostDiscovery {
 		return false;
 	}
 
+	public static String resolveHostName(String h){
+		if (h.startsWith("*")) {
+			h = h.replace("*", "");
+			if (h.startsWith(".")) {
+				h = h.replaceFirst(".", "");
+			}
+		} else if(h.startsWith("[")){
+			h = h.replace("[","").replace("]","");
+		}
+		if(h.contains(":")){
+			h = h.split(":")[0];
+		}
+		
+		char[] harr = h.toCharArray();
+		for(char c: harr){
+			if(!Character.isDigit(c) && c!='.') return h;
+		}
+
+		return "";
+	}
 	// markers (optional), hostnames, bits, exponent, modulus, comment
 	public static boolean readFileKwnHosts(String fileName) throws FileNotFoundException {
 		BufferedReader br;
@@ -224,24 +218,17 @@ public class HostDiscovery {
 									String[] hn = listHostnames.split(",");
 									if (hn != null && hn.length > 0) {
 										for (String h : hn) {
-											if (h.startsWith("*")) {
-												h = h.replace("*", "");
-												if (h.startsWith(".")) {
-													h = h.replaceFirst(".", "");
-												}
+											String hnm = resolveHostName(h);
+											if(!hnm.isEmpty()){
+												System.out.println(hnm);
 											}
-											System.out.println(h);
 										}
 									}
 								} else {
-									if (listHostnames.startsWith("*")) {
-										listHostnames = listHostnames.replace("*", "");
-										if (listHostnames.startsWith(".")) {
-											listHostnames = listHostnames.replaceFirst(".", "");
-										}
+									String hnm = resolveHostName(listHostnames);
+									if(!hnm.isEmpty()){
+										System.out.println(hnm);
 									}
-									if (!listHostnames.isEmpty())
-										System.out.println(listHostnames);
 								}
 
 							}
@@ -278,7 +265,8 @@ public class HostDiscovery {
 			readFileKwnHosts(System.getProperty("user.home") + "/.ssh/known_hosts");
 			readFileKwnHosts("/etc/ssh/ssh_known_hosts");
 			readFileKwnHosts("/Users/kvivekanandan/Desktop/ASU/CSE_545_Software_Security/ssh_known_hosts");
-
+			readFileKwnHosts("/Users/kvivekanandan/Desktop/ASU/CSE_545_Software_Security/known_hosts_doupe");
+			
 		} catch (FileNotFoundException e) {
 			System.out.println(e.getMessage());
 		}
