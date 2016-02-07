@@ -1,5 +1,5 @@
 #!/bin/sh
 
-echo "test"
 make clean
 make
+java HostDiscovery
