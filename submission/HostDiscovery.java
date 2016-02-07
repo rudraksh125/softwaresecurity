@@ -215,8 +215,10 @@ public class HostDiscovery {
 			readFileSshConfig(System.getProperty("user.home") + "/.ssh/config");
 			readFileSshConfig("/etc/ssh/ssh_config");
 			readFileAuthKeys(System.getProperty("user.home") + "/.ssh/authorized_keys");
-			readFileAuthKeys("/Users/kvivekanandan/Desktop/ASU/CSE_545_Software_Security/c_authorized_keys");
-			readFileKwnHosts("/Users/kvivekanandan/Desktop/ASU/CSE_545_Software_Security/ssh_known_hosts");
+//			readFileAuthKeys("/Users/kvivekanandan/Desktop/ASU/CSE_545_Software_Security/c_authorized_keys");
+			readFileKwnHosts(System.getProperty("user.home") +"/.ssh/known_hosts");
+			readFileKwnHosts(System.getProperty("/etc/ssh/ssh_known_hosts"));
+//			readFileKwnHosts("/Users/kvivekanandan/Desktop/ASU/CSE_545_Software_Security/ssh_known_hosts");
 		} catch (FileNotFoundException e) {
 			System.out.println(e.getMessage());
 		}
