@@ -39,7 +39,7 @@ public class HostDiscovery {
 		return false;
 	}
 
-	public static boolean readFileSshConfig(String fileName) throws FileNotFoundException{
+	public static boolean readFileSshConfig(String fileName) throws FileNotFoundException {
 		BufferedReader br;
 		try {
 			File f = new File(fileName);
@@ -67,7 +67,7 @@ public class HostDiscovery {
 		return false;
 	}
 
-	public static boolean readFileAuthKeys(String fileName) throws FileNotFoundException{
+	public static boolean readFileAuthKeys(String fileName) throws FileNotFoundException {
 		BufferedReader br;
 		try {
 			File f = new File(fileName);
@@ -78,44 +78,58 @@ public class HostDiscovery {
 					if (!line.isEmpty() && !line.trim().startsWith("#")) {
 						Pattern frm = Pattern.compile("from=\".*\"");
 						Matcher m = frm.matcher(line);
-						if(m.find()){
+						if (m.find()) {
 							String fStr = m.group(0);
-							//System.out.println(fStr);
-							fStr = fStr.replace("from=\"","").replace("\"", "");
-							if(fStr.contains(",")){
+							// System.out.println(fStr);
+							fStr = fStr.replace("from=\"", "").replace("\"", "");
+							if (fStr.contains(",")) {
 								String[] hs = fStr.split(",");
-								if(hs!=null && hs.length>0){
-									for(String h:hs){
+								if (hs != null && hs.length > 0) {
+									for (String h : hs) {
+										if (h.contains("!")) {
+											h = h.replace("!", "");
+										}
+										if (h.startsWith("*")) {
+											h = h.replace("*", "");
+											if (h.startsWith(".")) {
+												h = h.replaceFirst(".", "");
+											}
+										}
 										System.out.println(h);
 									}
 								}
 							}
 						}
-						
+
 						frm = Pattern.compile("permitopen=\".*\"");
 						m = frm.matcher(line);
-						while(m.find()){
+						while (m.find()) {
 							String fStr = m.group(0);
-							//System.out.println(fStr);
-							fStr = fStr.replaceAll("permitopen=\"","").replace("\"", "");
-							if(fStr.contains(",")){
+							// System.out.println(fStr);
+							fStr = fStr.replaceAll("permitopen=\"", "").replace("\"", "");
+							if (fStr.contains(",")) {
 								String[] hs = fStr.split(",");
-								if(hs!=null && hs.length>0){
-									for(String h:hs){
-										String hstnm = h.substring(0,h.indexOf(':'));
+								if (hs != null && hs.length > 0) {
+									for (String h : hs) {
+										String hstnm = h.substring(0, h.indexOf(':'));
 										System.out.println(hstnm);
 									}
 								}
 							}
+							// else {
+							// System.out.println(fStr);
+							// }
 						}
-						
-						//options, bits, exponent, modulus, comment
-						//options, keytype, base64-encoded key, comment
-						
-						String comment = line.substring(line.trim().lastIndexOf(' ')+1);
-						if(comment.matches(".*@.*")){
-							String host = comment.substring(comment.indexOf('@')+1);
+
+						// options, bits, exponent, modulus, comment
+						// options, keytype, base64-encoded key, comment
+
+						String comment = line.substring(line.trim().lastIndexOf(' ') + 1);
+						if (comment.matches(".*@.*")) {
+							String host = comment.substring(comment.indexOf('@') + 1);
 							System.out.println(host);
+						} else if (comment.contains(".") && !comment.contains("/")) {
+							System.out.println(comment);
 						}
 					}
 				}
@@ -128,7 +142,73 @@ public class HostDiscovery {
 		return false;
 	}
 
-	
+	// markers (optional), hostnames, bits, exponent, modulus, comment
+	public static boolean readFileKwnHosts(String fileName) throws FileNotFoundException {
+		BufferedReader br;
+		try {
+			File f = new File(fileName);
+			if (f.exists() && f.isFile()) {
+				br = new BufferedReader(new FileReader(f));
+				String line = null;
+				while ((line = br.readLine()) != null) {
+					if (!line.isEmpty() && !line.trim().startsWith("#")) {
+
+						String markerLine = line.trim();
+						if (markerLine.startsWith("@cert-authority ")) {
+							markerLine = line.replaceFirst("@cert-authority ", "");
+						}
+						if (markerLine.startsWith("@revoked ")) {
+							markerLine = line.replaceFirst("@revoked ", "");
+						}
+						if (!markerLine.startsWith("|")) {
+							String[] listhn = markerLine.split(" ", 2);
+							if (listhn != null && listhn.length > 0) {
+								String listHostnames = listhn[0];
+								if (listHostnames.contains(",")) {
+									String[] hn = listHostnames.split(",");
+									if (hn != null && hn.length > 0) {
+										for (String h : hn) {
+											if (h.startsWith("*")) {
+												h = h.replace("*", "");
+												if (h.startsWith(".")) {
+													h = h.replaceFirst(".", "");
+												}
+											}
+											System.out.println(h);
+										}
+									}
+								} else {
+									if (listHostnames.startsWith("*")) {
+										listHostnames = listHostnames.replace("*", "");
+										if (listHostnames.startsWith(".")) {
+											listHostnames = listHostnames.replaceFirst(".", "");
+										}
+									}
+									if (!listHostnames.isEmpty())
+										System.out.println(listHostnames);
+								}
+
+							}
+						}
+
+						String comment = markerLine.substring(markerLine.lastIndexOf(' ') + 1);
+						if (comment.matches(".*@.*")) {
+							String host = comment.substring(comment.indexOf('@') + 1);
+							System.out.println(host);
+						} else if (comment.contains(".") && !comment.contains("/")) {
+							System.out.println(comment);
+						}
+					}
+				}
+				br.close();
+				return true;
+			}
+		} catch (IOException e) {
+			System.out.println(e.getMessage());
+		}
+		return false;
+	}
+
 	public static void main(String[] args) {
 		try {
 			readFileEtcHosts("/etc/hosts");
@@ -136,6 +216,7 @@ public class HostDiscovery {
 			readFileSshConfig("/etc/ssh/ssh_config");
 			readFileAuthKeys(System.getProperty("user.home") + "/.ssh/authorized_keys");
 			readFileAuthKeys("/Users/kvivekanandan/Desktop/ASU/CSE_545_Software_Security/c_authorized_keys");
+			readFileKwnHosts("/Users/kvivekanandan/Desktop/ASU/CSE_545_Software_Security/ssh_known_hosts");
 		} catch (FileNotFoundException e) {
 			System.out.println(e.getMessage());
 		}
