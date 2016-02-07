@@ -3,6 +3,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author kvivekanandan Feb 6, 2016 HostDiscovery.java
@@ -37,7 +39,7 @@ public class HostDiscovery {
 		return false;
 	}
 
-	public static boolean readFileSshConfig(String fileName) {
+	public static boolean readFileSshConfig(String fileName) throws FileNotFoundException{
 		BufferedReader br;
 		try {
 			File f = new File(fileName);
@@ -65,11 +67,75 @@ public class HostDiscovery {
 		return false;
 	}
 
+	public static boolean readFileAuthKeys(String fileName) throws FileNotFoundException{
+		BufferedReader br;
+		try {
+			File f = new File(fileName);
+			if (f.exists() && f.isFile()) {
+				br = new BufferedReader(new FileReader(f));
+				String line = null;
+				while ((line = br.readLine()) != null) {
+					if (!line.isEmpty() && !line.trim().startsWith("#")) {
+						Pattern frm = Pattern.compile("from=\".*\"");
+						Matcher m = frm.matcher(line);
+						if(m.find()){
+							String fStr = m.group(0);
+							//System.out.println(fStr);
+							fStr = fStr.replace("from=\"","").replace("\"", "");
+							if(fStr.contains(",")){
+								String[] hs = fStr.split(",");
+								if(hs!=null && hs.length>0){
+									for(String h:hs){
+										System.out.println(h);
+									}
+								}
+							}
+						}
+						
+						frm = Pattern.compile("permitopen=\".*\"");
+						m = frm.matcher(line);
+						while(m.find()){
+							String fStr = m.group(0);
+							//System.out.println(fStr);
+							fStr = fStr.replaceAll("permitopen=\"","").replace("\"", "");
+							if(fStr.contains(",")){
+								String[] hs = fStr.split(",");
+								if(hs!=null && hs.length>0){
+									for(String h:hs){
+										String hstnm = h.substring(0,h.indexOf(':'));
+										System.out.println(hstnm);
+									}
+								}
+							}
+						}
+						
+						//options, bits, exponent, modulus, comment
+						//options, keytype, base64-encoded key, comment
+						
+						String comment = line.substring(line.trim().lastIndexOf(' ')+1);
+						if(comment.matches(".*@.*")){
+							String host = comment.substring(comment.indexOf('@')+1);
+							System.out.println(host);
+						}
+					}
+				}
+				br.close();
+				return true;
+			}
+		} catch (IOException e) {
+			System.out.println(e.getMessage());
+		}
+		return false;
+	}
+
+	
 	public static void main(String[] args) {
 		try {
 			readFileEtcHosts("/etc/hosts");
 			readFileSshConfig(System.getProperty("user.home") + "/.ssh/config");
 			readFileSshConfig("/etc/ssh/ssh_config");
+			readFileAuthKeys(System.getProperty("user.home") + "/.ssh/authorized_keys");
+			readFileAuthKeys("/Users/kvivekanandan/Desktop/ASU/CSE_545_Software_Security/c_authorized_keys");
 		} catch (FileNotFoundException e) {
 			System.out.println(e.getMessage());
 		}
