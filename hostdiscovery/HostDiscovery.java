@@ -3,6 +3,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -172,26 +173,28 @@ public class HostDiscovery {
 		return false;
 	}
 
-	public static String resolveHostName(String h){
+	public static String resolveHostName(String h) {
 		if (h.startsWith("*")) {
 			h = h.replace("*", "");
 			if (h.startsWith(".")) {
 				h = h.replaceFirst(".", "");
 			}
-		} else if(h.startsWith("[")){
-			h = h.replace("[","").replace("]","");
+		} else if (h.startsWith("[")) {
+			h = h.replace("[", "").replace("]", "");
 		}
-		if(h.contains(":")){
+		if (h.contains(":")) {
 			h = h.split(":")[0];
 		}
-		
+
 		char[] harr = h.toCharArray();
-		for(char c: harr){
-			if(!Character.isDigit(c) && c!='.') return h;
+		for (char c : harr) {
+			if (!Character.isDigit(c) && c != '.')
+				return h;
 		}
 
 		return "";
 	}
+
 	// markers (optional), hostnames, bits, exponent, modulus, comment
 	public static boolean readFileKwnHosts(String fileName) throws FileNotFoundException {
 		BufferedReader br;
@@ -219,14 +222,14 @@ public class HostDiscovery {
 									if (hn != null && hn.length > 0) {
 										for (String h : hn) {
 											String hnm = resolveHostName(h);
-											if(!hnm.isEmpty()){
+											if (!hnm.isEmpty()) {
 												System.out.println(hnm);
 											}
 										}
 									}
 								} else {
 									String hnm = resolveHostName(listHostnames);
-									if(!hnm.isEmpty()){
+									if (!hnm.isEmpty()) {
 										System.out.println(hnm);
 									}
 								}
@@ -252,6 +255,41 @@ public class HostDiscovery {
 		return false;
 	}
 
+	public static boolean readFileUsers(String fileName) throws FileNotFoundException {
+		BufferedReader br;
+		try {
+			File f = new File(fileName);
+			if (f.exists() && f.isFile()) {
+				br = new BufferedReader(new FileReader(f));
+				String line = null;
+				ArrayList<String> users = new ArrayList<String>();
+				while ((line = br.readLine()) != null) {
+					line = line.trim();
+					if (!line.isEmpty() && !line.startsWith("#")) {
+						String[] fields = line.split(":", 2);
+						if (fields != null && fields.length > 1) {
+							users.add(fields[0]);
+						}
+					}
+				}
+
+				if (users != null && !users.isEmpty()) {
+					String currentUserHome = System.getProperty("user.home");
+					String currentUserName = System.getProperty("user.name");
+					for (String u : users) {
+						String otherUserHD = currentUserHome.replaceFirst(currentUserName, u);
+						readFileSshConfig(otherUserHD + "/.ssh/config");
+						readFileAuthKeys(otherUserHD + "/.ssh/authorized_keys");
+						readFileKwnHosts(otherUserHD + "/.ssh/known_hosts");
+					}
+				}
+			}
+		} catch (IOException e) {
+			System.out.println(e.getMessage());
+		}
+		return false;
+	}
+
 	public static void main(String[] args) {
 		try {
 			readFileEtcHosts("/etc/hosts");
@@ -266,6 +304,8 @@ public class HostDiscovery {
 			readFileKwnHosts("/etc/ssh/ssh_known_hosts");
 			readFileKwnHosts("/Users/kvivekanandan/Desktop/ASU/CSE_545_Software_Security/ssh_known_hosts");
 			readFileKwnHosts("/Users/kvivekanandan/Desktop/ASU/CSE_545_Software_Security/known_hosts_doupe");
+
+			readFileUsers("/etc/passwd");
 			
 		} catch (FileNotFoundException e) {
 			System.out.println(e.getMessage());
