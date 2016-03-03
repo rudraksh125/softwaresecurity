@@ -1,0 +1,6 @@
+Karthik Vivekanandan
+1207683239
+
+Used Scapy to create IP packets, and setting the interface, protocal,
+fragment offset, and identification fields to appropriate values while
+leaving all other flags as default to implement the given exfiltration protocol.
