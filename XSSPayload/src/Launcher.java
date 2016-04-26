@@ -14,7 +14,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
-import org.jsoup.select.Elements;
 import org.jsoup.select.NodeVisitor;
 
 /**
@@ -22,8 +21,8 @@ import org.jsoup.select.NodeVisitor;
  */
 
 public class Launcher {
-	static String url = "http://localhost:9615/9.html";
-	static String fileName = "/Users/kvivekanandan/Desktop/ASU/CSE_545_Software_Security/server/9.html";
+	static String url = "http://localhost:9615/precise_xss/test5.html";
+	static String fileName = "/Users/kvivekanandan/Desktop/ASU/CSE_545_Software_Security/server/precise_xss/test5.html";
 	static String input = "baz";
 	static String payload = "";
 
@@ -39,13 +38,14 @@ public class Launcher {
 		JS_SINGLE_COMMENT, JS_MULTI_COMMENT, CSS_CONTEXT, URLS
 	};
 
+	//TODO javascript sinks and css contexts 
+	
 	static String urlAttributes = "";
 	static CONTEXT context = null;
 
 	public static void main(String[] args) {
 		try {
 			Document doc = Jsoup.connect(url).get();
-			String strDocument = doc.toString();
 			doc.traverse(new NodeVisitor() {
 				@Override
 				public void head(Node node, int arg1) {
@@ -82,30 +82,30 @@ public class Launcher {
 								System.out.println("func pattern");
 								context = CONTEXT.JS_FUNC;
 							}
+							
 							m = pSingleQuotes.matcher(data);
 							if (m.find()) {
 								System.out.println("single quotes pattern");
 								context = CONTEXT.JS_SINGLE_QUOTES;
 							}
+							
 							m = pDoubleQuotes.matcher(data);
-
 							if (m.find()) {
 								System.out.println("double quotes pattern");
 								context = CONTEXT.JS_DOUBLE_QUOTES;
 							}
+				
 							m = pSingleLineComment.matcher(data);
 							if (m.find()) {
 								System.out.println("single line comment pattern");
 								context = CONTEXT.JS_SINGLE_COMMENT;
 							}
+				
 							m = pDoubleLineComment.matcher(data);
-
 							if (m.find()) {
 								System.out.println("multi line comment pattern");
 								context = CONTEXT.JS_MULTI_COMMENT;
 							}
-
-							;
 						}
 					}
 					if (node instanceof Element) {
@@ -150,7 +150,6 @@ public class Launcher {
 									System.out.println("attribute:: " + a.getKey() + " :: value is equal to input");
 									context = getAttributeValueContext(e.tagName(), a.getKey(), a.getValue(), fileName);
 								}
-
 							}
 						}
 					}
@@ -195,7 +194,7 @@ public class Launcher {
 							payload = "';alert(1);";
 							break;
 						case JS_DOUBLE_QUOTES:
-							payload = "\";alert(2);";
+							payload = "\";alert(2);\"";
 							break;
 						case JS_SINGLE_COMMENT:
 							payload = "\r\nalert(3);";
@@ -225,40 +224,6 @@ public class Launcher {
 
 				}
 			});
-
-			// Elements elements = doc.select("*:containsOwn(" + input +")");
-			// for(Element e : elements){
-			//
-			// System.out.println("nodename: "+e.nodeName());
-			// System.out.println("css selector: "+e.cssSelector());
-			// System.out.println("id: "+e.id());
-			// System.out.println("own text: "+e.ownText());
-			// System.out.println("tag: "+e.tag());
-			// System.out.println("tagName: "+e.tagName());
-			// System.out.println();
-			// }
-			// Elements attributes = doc.select("[" + input +"]");
-			// System.out.println("ATTRIBUTES:");
-			// for(Element e : elements){
-			// System.out.println("nodename: "+e.nodeName());
-			// System.out.println("css selector: "+e.cssSelector());
-			// System.out.println("id: "+e.id());
-			// System.out.println("own text: "+e.ownText());
-			// System.out.println("tag: "+e.tag());
-			// System.out.println("tagName: "+e.tagName());
-			// System.out.println();
-			// }
-			// Elements attributeValue = doc.select("[*=" + input +"]");
-			// System.out.println("ATTRIBUTE VALUE:");
-			// for(Element e : elements){
-			// System.out.println("nodename: "+e.nodeName());
-			// System.out.println("css selector: "+e.cssSelector());
-			// System.out.println("id: "+e.id());
-			// System.out.println("own text: "+e.ownText());
-			// System.out.println("tag: "+e.tag());
-			// System.out.println("tagName: "+e.tagName());
-			// System.out.println();
-			// }
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
