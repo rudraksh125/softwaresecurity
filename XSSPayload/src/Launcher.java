@@ -21,10 +21,11 @@ import org.jsoup.select.NodeVisitor;
  */
 
 public class Launcher {
-	static String url = "http://localhost:9615/precise_xss/test5.html";
-	static String fileName = "/Users/kvivekanandan/Desktop/ASU/CSE_545_Software_Security/server/precise_xss/test5.html";
-	static String input = "baz";
-	static String payload = "";
+	
+	static String fileName = null;
+	static String input = null;
+	static String payload = null;
+//	static String url = "http://localhost:9615/6.html";
 
 	/*
 	 * 1 - simple HTML; <h1> 2 - attribute value, 3 cases ;3 - comments 3 cases;
@@ -39,13 +40,33 @@ public class Launcher {
 	};
 
 	//TODO javascript sinks and css contexts 
+	// JS_FUNC
+	// SINGLE LINE COMMENT
 	
 	static String urlAttributes = "";
 	static CONTEXT context = null;
 
 	public static void main(String[] args) {
+		
+		if(args!=null && args.length > 1){
+			input = args[0];
+			fileName = args[1];
+		} else{
+			System.out.println("Enter inputs to the program on command-line. "
+					+ "First parameter is user input, second is the path to the HTML file.");
+			return;
+		}
 		try {
-			Document doc = Jsoup.connect(url).get();
+			
+			/* to get from a URL
+			 *  
+			 * Document doc = Jsoup.connect(url).get();
+			 * 
+			 */
+	
+			File fileContent = new File(fileName);
+			Document doc = Jsoup.parse(fileContent, "UTF-8");
+			
 			doc.traverse(new NodeVisitor() {
 				@Override
 				public void head(Node node, int arg1) {
