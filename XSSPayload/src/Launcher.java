@@ -21,11 +21,12 @@ import org.jsoup.select.NodeVisitor;
  */
 
 public class Launcher {
-	
+
 	static String fileName = null;
 	static String input = null;
 	static String payload = null;
-//	static String url = "http://localhost:9615/6.html";
+
+	// static String url = "http://localhost:9615/6.html";
 
 	/*
 	 * 1 - simple HTML; <h1> 2 - attribute value, 3 cases ;3 - comments 3 cases;
@@ -34,39 +35,38 @@ public class Launcher {
 	 */
 	static enum CONTEXT {
 		SIMPLE_HTML, HTML_ATTRIBUTE_NAME, HTML_ATTRIBUTE_VALUE_SINGLE, HTML_ATTRIBUTE_VALUE_DOUBLE, 
-		HTML_ATTRIBUTE_VALUE_NO, HTML_ATTRIBUTE_VALUE_EVENT_SINGLE, HTML_ATTRIBUTE_VALUE_EVENT_DOUBLE,
+		HTML_ATTRIBUTE_VALUE_NO, HTML_ATTRIBUTE_VALUE_EVENT_SINGLE, HTML_ATTRIBUTE_VALUE_EVENT_DOUBLE, 
 		HTML_ATTRIBUTE_VALUE_EVENT_NO, HTML_COMMENTS, JS_FUNC, JS_SINGLE_QUOTES, JS_DOUBLE_QUOTES, 
 		JS_SINGLE_COMMENT, JS_MULTI_COMMENT, CSS_CONTEXT, URLS
 	};
 
-	//TODO javascript sinks and css contexts 
+	// TODO javascript sinks and css contexts
 	// JS_FUNC
 	// SINGLE LINE COMMENT
-	
+
 	static String urlAttributes = "";
 	static CONTEXT context = null;
 
 	public static void main(String[] args) {
-		
-		if(args!=null && args.length > 1){
+
+		if (args != null && args.length > 1) {
 			input = args[0];
 			fileName = args[1];
-		} else{
-			System.out.println("Enter inputs to the program on command-line. "
-					+ "First parameter is user input, second is the path to the HTML file.");
+		} else {
+			System.out.println("Enter inputs to the program on command-line. " + "First parameter is user input, second is the path to the HTML file.");
 			return;
 		}
 		try {
-			
-			/* to get from a URL
-			 *  
-			 * Document doc = Jsoup.connect(url).get();
+
+			/*
+			 * to get from a URL
 			 * 
+			 * Document doc = Jsoup.connect(url).get();
 			 */
-	
+
 			File fileContent = new File(fileName);
 			Document doc = Jsoup.parse(fileContent, "UTF-8");
-			
+
 			doc.traverse(new NodeVisitor() {
 				@Override
 				public void head(Node node, int arg1) {
@@ -86,7 +86,7 @@ public class Launcher {
 						String data = dn.getWholeData();
 						if (data != null && data.contains(input)) {
 							System.out.println("DATA NODE contains input: " + data);
-							String func = "(" + input + ")";
+							String func = "\\(\"" + input + "\"\\)";
 							String singleQuotes = "'" + input + "'";
 							String doubleQuotes = "\"" + input + "\"";
 							String singleLineComment = "//.*" + input + ".*\r\n";
@@ -103,29 +103,36 @@ public class Launcher {
 								System.out.println("func pattern");
 								context = CONTEXT.JS_FUNC;
 							}
-							
-							m = pSingleQuotes.matcher(data);
-							if (m.find()) {
-								System.out.println("single quotes pattern");
-								context = CONTEXT.JS_SINGLE_QUOTES;
+
+							if (context == null) {
+								m = pSingleQuotes.matcher(data);
+								if (m.find()) {
+									System.out.println("single quotes pattern");
+									context = CONTEXT.JS_SINGLE_QUOTES;
+								}
 							}
-							
-							m = pDoubleQuotes.matcher(data);
-							if (m.find()) {
-								System.out.println("double quotes pattern");
-								context = CONTEXT.JS_DOUBLE_QUOTES;
+
+							if (context == null) {
+								m = pDoubleQuotes.matcher(data);
+								if (m.find()) {
+									System.out.println("double quotes pattern");
+									context = CONTEXT.JS_DOUBLE_QUOTES;
+								}
 							}
-				
-							m = pSingleLineComment.matcher(data);
-							if (m.find()) {
-								System.out.println("single line comment pattern");
-								context = CONTEXT.JS_SINGLE_COMMENT;
+
+							if (context == null) {
+								m = pSingleLineComment.matcher(data);
+								if (m.find()) {
+									System.out.println("single line comment pattern");
+									context = CONTEXT.JS_SINGLE_COMMENT;
+								}
 							}
-				
-							m = pDoubleLineComment.matcher(data);
-							if (m.find()) {
-								System.out.println("multi line comment pattern");
-								context = CONTEXT.JS_MULTI_COMMENT;
+							if (context == null) {
+								m = pDoubleLineComment.matcher(data);
+								if (m.find()) {
+									System.out.println("multi line comment pattern");
+									context = CONTEXT.JS_MULTI_COMMENT;
+								}
 							}
 						}
 					}
@@ -215,7 +222,7 @@ public class Launcher {
 							payload = "';alert(1);'";
 							break;
 						case JS_DOUBLE_QUOTES:
-							payload = "\");alert(2);(\"";
+							payload = "\";alert(2);\"";
 							break;
 						case JS_SINGLE_COMMENT:
 							payload = "\r\nalert(3);";
