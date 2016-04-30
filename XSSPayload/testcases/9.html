@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html>
-<body onload="baz">
+<body>
 
 <p>
-urls
+The global function (myFunction) returns the product of the arguments (a ,b):
 </p>
 
-<h1 id1="baz"> double</h1>
-<h2 id2='baz'> single</h2>
-<h3 id3=baz> no quotes</h3>
-<h4 baz> just as attribute </h4>
-<a href=baz>XSS</a>
+<p id="demo"></p>
+
+<script>
+function myFunction(a) {
+    return a;
+}
+document.getElementById("demo").innerHTML = myFunction("baz"); 
+</script>
 
 </body>
 </html>
