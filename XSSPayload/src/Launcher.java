@@ -212,16 +212,16 @@ public class Launcher {
 							payload = "-</script><img src=x onerror=alert(1)>";
 							break;
 						case JS_SINGLE_QUOTES:
-							payload = "';alert(1);";
+							payload = "';alert(1);'";
 							break;
 						case JS_DOUBLE_QUOTES:
-							payload = "\";alert(2);\"";
+							payload = "\");alert(2);(\"";
 							break;
 						case JS_SINGLE_COMMENT:
 							payload = "\r\nalert(3);";
 							break;
 						case JS_MULTI_COMMENT:
-							payload = "*/alert(1);";
+							payload = "*/alert(1);/*";
 							break;
 						case CSS_CONTEXT:
 							break;
